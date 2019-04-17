@@ -1,44 +1,54 @@
 from display import *
 from matrix import *
 from gmath import *
+import random
+
 
 def scanline_convert(polygons, i, screen, zbuffer, color):
     list = sort_three(polygons,i)
-    top = list[0]
+    top = list[2]
     middle = list[1]
-    bottom = list[2]
+    bottom = list[0]
+    #print(list)
 
     xL = bottom[0]
     xR = bottom[0]
-    zL = bottom[0]
-    zR = bottom[0]
+    zL = bottom[2]
+    zR = bottom[2]
     y = bottom[1]
+    dxR,dzR,dxL,dzL = 0,0,0,0
 
-    if(top[1]-bottom[1] != 0 & middle[1]-bottom[1] !=0):
-
+    if (top[1]!=bottom[1]):
         dxR = (top[0]-bottom[0])/(top[1]-bottom[1])
-        dxL = (middle[0]-bottom[0])/(middle[1]-bottom[1])
         dzR = (top[2]-bottom[2])/(top[1]-bottom[1])
+    if (middle[1]!=bottom[1]):
+        dxL = (middle[0]-bottom[0])/(middle[1]-bottom[1])
         dzL = (middle[2]-bottom[2])/(middle[1]-bottom[1])
 
-        while(y < middle[1]):
-            draw_line( xL, y, zL, xR, y, zR, screen, zbuffer, color )
-            y += 1
-            xL += dxL
-            xR += dxR
-            zL += dzL
-            zR += dzR
-
-    dxL = (top[0]-middle[0])/(top[1]-middle[1])
-    dzL = (top[2]-middle[2])/(top[1]-middle[1])
-
-    while(y < top[1]):
+    while(y < middle[1]):
         draw_line( xL, y, zL, xR, y, zR, screen, zbuffer, color )
         y += 1
         xL += dxL
         xR += dxR
         zL += dzL
         zR += dzR
+
+    y = middle[1]
+    xL = middle[0]
+    zR = middle[2]
+
+    if (top[1] != middle[1]):
+        dxL = (top[0]-middle[0])/(top[1]-middle[1])
+        dzL = (top[2]-middle[2])/(top[1]-middle[1])
+
+    while(y <= top[1]):
+        draw_line( xL, y, zL, xR, y, zR, screen, zbuffer, color )
+        y += 1
+        xL += dxL
+        xR += dxR
+        zL += dzL
+        zR += dzR
+    #print("scanline loop")
 
 def sort_three(polygons,i):
     a = polygons[i][1]
@@ -47,24 +57,32 @@ def sort_three(polygons,i):
     list = [a,b,c]
     list.sort()
     if (a == list[0]):
-        top = polygons[i]
+        bottom = polygons[i]
+        if (b == list[1]):
+            middle = polygons[i+1]
+            top = polygons[i+2]
+        if (b == list[2]):
+            top = polygons[i+1]
+            middle = polygons[i+2]
+
     if (a == list[1]):
         middle = polygons[i]
+        if (b == list[0]):
+            bottom = polygons[i+1]
+            top = polygons[i+2]
+        if (b == list[2]):
+            top = polygons[i+1]
+            bottom = polygons[i+2]
+
     if (a == list[2]):
-        bottom = polygons[i]
-    if (b == list[0]):
-        top = polygons[i+1]
-    if (b == list[1]):
-        middle = polygons[i+1]
-    if (b == list[2]):
-        bottom = polygons[i+1]
-    if (c == list[0]):
-        top = polygons[i+2]
-    if (c == list[1]):
-        middle = polygons[i+2]
-    if (c == list[2]):
-        bottom = polygons[i+2]
-    return [top,middle,bottom]
+        top = polygons[i]
+        if (b == list[0]):
+            bottom = polygons[i+1]
+            middle = polygons[i+2]
+        if (b == list[1]):
+            middle = polygons[i+1]
+            bottom = polygons[i+2]
+    return [bottom,middle,top]
 
 def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point(polygons, x0, y0, z0)
@@ -76,35 +94,39 @@ def draw_polygons( polygons, screen, zbuffer, color ):
         print 'Need at least 3 points to draw'
         return
 
+    #print(polygons)
     point = 0
     while point < len(polygons) - 2:
-
+        color = [random.randint(0,255),random.randint(0,255),random.randint(0,255)]
         normal = calculate_normal(polygons, point)[:]
         #print normal
         if normal[2] > 0:
+            #print("Drawpoly loop")
+            #print(point)
             scanline_convert(polygons, point, screen, zbuffer, color)
-        #     draw_line( int(polygons[point][0]),
-        #                int(polygons[point][1]),
-        #                polygons[point][2],
-        #                int(polygons[point+1][0]),
-        #                int(polygons[point+1][1]),
-        #                polygons[point+1][2],
-        #                screen, zbuffer, color)
-        #     draw_line( int(polygons[point+2][0]),
-        #                int(polygons[point+2][1]),
-        #                polygons[point+2][2],
-        #                int(polygons[point+1][0]),
-        #                int(polygons[point+1][1]),
-        #                polygons[point+1][2],
-        #                screen, zbuffer, color)
-        #     draw_line( int(polygons[point][0]),
-        #                int(polygons[point][1]),
-        #                polygons[point][2],
-        #                int(polygons[point+2][0]),
-        #                int(polygons[point+2][1]),
-        #                polygons[point+2][2],
-        #                screen, zbuffer, color)
-            point+= 3
+            # draw_line( int(polygons[point][0]),
+            #            int(polygons[point][1]),
+            #            polygons[point][2],
+            #            int(polygons[point+1][0]),
+            #            int(polygons[point+1][1]),
+            #            polygons[point+1][2],
+            #            screen, zbuffer, color)
+            # draw_line( int(polygons[point+2][0]),
+            #            int(polygons[point+2][1]),
+            #            polygons[point+2][2],
+            #            int(polygons[point+1][0]),
+            #            int(polygons[point+1][1]),
+            #            polygons[point+1][2],
+            #            screen, zbuffer, color)
+            # draw_line( int(polygons[point][0]),
+            #            int(polygons[point][1]),
+            #            polygons[point][2],
+            #            int(polygons[point+2][0]),
+            #            int(polygons[point+2][1]),
+            #            polygons[point+2][2],
+            #            screen, zbuffer, color)
+            # print([polygons[point],polygons[point+1],polygons[point+2]])
+        point+= 3
 
 def add_box( polygons, x, y, z, width, height, depth ):
     x1 = x + width
@@ -314,7 +336,6 @@ def add_point( matrix, x, y, z=0 ):
 
 
 def draw_line( x0, y0, z0, x1, y1, z1, screen, zbuffer, color ):
-
     #swap points if going right -> left
     if x0 > x1:
         xt = x0
@@ -366,8 +387,11 @@ def draw_line( x0, y0, z0, x1, y1, z1, screen, zbuffer, color ):
             loop_start = y1
             loop_end = y
 
+    len = loop_end - loop_start
+    z = 0
     while ( loop_start < loop_end ):
-        plot( screen, zbuffer, color, x, y, 0 )
+        z = z0 + (z1-z0)*(float(loop_end-loop_start)/len)
+        plot( screen, zbuffer, color, x, y, z )
         if ( (wide and ((A > 0 and d > 0) or (A < 0 and d < 0))) or
              (tall and ((A > 0 and d < 0) or (A < 0 and d > 0 )))):
 
@@ -379,4 +403,4 @@ def draw_line( x0, y0, z0, x1, y1, z1, screen, zbuffer, color ):
             y+= dy_east
             d+= d_east
         loop_start+= 1
-    plot( screen, zbuffer, color, x, y, 0 )
+    plot( screen, zbuffer, color, x, y, z )
