@@ -9,13 +9,12 @@ def scanline_convert(polygons, i, screen, zbuffer, color):
     top = list[2]
     middle = list[1]
     bottom = list[0]
-    #print(list)
 
     xL = bottom[0]
     xR = bottom[0]
     zL = bottom[2]
     zR = bottom[2]
-    y = bottom[1]
+    y = int(bottom[1])
     dxR,dzR,dxL,dzL = 0,0,0,0
 
     if (top[1]!=bottom[1]):
@@ -25,64 +24,42 @@ def scanline_convert(polygons, i, screen, zbuffer, color):
         dxL = (middle[0]-bottom[0])/(middle[1]-bottom[1])
         dzL = (middle[2]-bottom[2])/(middle[1]-bottom[1])
 
-    while(y < middle[1]):
-        draw_line( xL, y, zL, xR, y, zR, screen, zbuffer, color )
+    while(y < int(middle[1])):
+        draw_line(int(xR), y, int(zR), int(xL), y, int(zL), screen, zbuffer, color)
         y += 1
-        xL += dxL
         xR += dxR
-        zL += dzL
+        xL += dxL
         zR += dzR
+        zL += dzL
 
     y = middle[1]
     xL = middle[0]
-    zR = middle[2]
+    zL = middle[2]
+    dxL = 0
+    dzL = 0
 
     if (top[1] != middle[1]):
         dxL = (top[0]-middle[0])/(top[1]-middle[1])
         dzL = (top[2]-middle[2])/(top[1]-middle[1])
 
-    while(y <= top[1]):
-        draw_line( xL, y, zL, xR, y, zR, screen, zbuffer, color )
+    while ( y <= int(top[1]) ):
+        draw_line(int(xR), y, int(zR), int(xL), y, int(zL), screen, zbuffer, color)
         y += 1
-        xL += dxL
         xR += dxR
-        zL += dzL
+        xL += dxL
         zR += dzR
+        zL += dzL
+
     #print("scanline loop")
 
 def sort_three(polygons,i):
-    a = polygons[i][1]
-    b = polygons[i+1][1]
-    c = polygons[i+2][1]
+    a = polygons[i]
+    b = polygons[i+1]
+    c = polygons[i+2]
     list = [a,b,c]
-    list.sort()
-    if (a == list[0]):
-        bottom = polygons[i]
-        if (b == list[1]):
-            middle = polygons[i+1]
-            top = polygons[i+2]
-        if (b == list[2]):
-            top = polygons[i+1]
-            middle = polygons[i+2]
+    list.sort(key = lambda x:x[1])
 
-    if (a == list[1]):
-        middle = polygons[i]
-        if (b == list[0]):
-            bottom = polygons[i+1]
-            top = polygons[i+2]
-        if (b == list[2]):
-            top = polygons[i+1]
-            bottom = polygons[i+2]
-
-    if (a == list[2]):
-        top = polygons[i]
-        if (b == list[0]):
-            bottom = polygons[i+1]
-            middle = polygons[i+2]
-        if (b == list[1]):
-            middle = polygons[i+1]
-            bottom = polygons[i+2]
-    return [bottom,middle,top]
+    return [list[0],list[1],list[2]]
 
 def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point(polygons, x0, y0, z0)
